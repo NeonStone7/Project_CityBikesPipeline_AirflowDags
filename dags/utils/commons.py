@@ -30,3 +30,33 @@ def return_default_tasks():
     start_task = EmptyOperator(task_id = 'start')
     end_task = EmptyOperator(task_id = 'end')
     return start_task, end_task
+
+def spark_cmd(task_id, args):
+    return [
+        {
+                'Name': task_id,
+                'ActionOnFailure': 'CANCEL_AND_WAIT',
+                'HadoopJarStep': {
+                    'Jar': 'command-runner.jar',
+                    'Args': args
+                }
+            }
+        ]
+
+def build_spark_submit_command(task_id, job_file, py_files, jars_path, job_args):
+    start = ['spark-submit',
+         '--deploy-mode', 
+         'cluster',
+         '--master',
+         'yarn']
+
+    start.append(job_file)
+
+    for key, value in job_args.items():
+        start.append(key)
+        start.append(value)
+
+    start.extend([f"--jars", ','.join(jars_path)])
+    start.extend([f"--py-files", ','.join(py_files)])
+
+    return spark_cmd(task_id, start)

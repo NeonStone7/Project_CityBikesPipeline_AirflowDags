@@ -16,4 +16,7 @@ RAW_BUCKET_NAME = "citybikes-raw-data"
 TRANSFORMED_BUCKET = "citybikes-transformed-data"
 NETWORK_IDS = ["abu-dhabi-careem-bike", "acces-velo-saguenay"]
 
-DATETIME = datetime.now().strftime('%Y-%M-%d')
+DATETIME = datetime.now().strftime('%Y-%m-%d')
+AGG_TABLES = ['stations', 'networks', 'bike_activity']
+INITIAL_TABLES = ['initial_network_stations']
+ICEBERG_JARS_PATH = ["s3://citybikes-raw-data/jars/iceberg-spark3-runtime-0.13.2.jar"]
