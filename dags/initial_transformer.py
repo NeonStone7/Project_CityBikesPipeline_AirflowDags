@@ -63,7 +63,7 @@ def transform_data():
                     job_flow_id=job_flow_id,
                     steps = build_spark_submit_command(task_id, 
                                                     "s3://citybikes-raw-data/scripts/transformation_job.py",
-                                                    "s3://citybikes-raw-data/scripts/spark_job.zip", 
+                                                    "s3://citybikes-raw-data/scripts/spark_jobs.zip", 
                                                     ICEBERG_JARS_PATH, 
                                                     job_args)
 
