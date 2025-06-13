@@ -11,19 +11,22 @@ SPARK_CONFIG = [
     {
         "Classification": "spark-defaults",
         "Properties": {
-            "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.1,software.amazon.s3tables:s3-tables-catalog-for-iceberg:0.1.0",
-            "spark.sql.catalog.s3tablesbucket": "org.apache.iceberg.spark.SparkCatalog",
-            "spark.sql.catalog.s3tablesbucket.catalog-impl": "software.amazon.s3tables.iceberg.S3TablesCatalog",
-            "spark.sql.catalog.s3tablesbucket.warehouse": "arn:aws:s3tables:us-west-1:339713022320:bucket/airflow-stock-lakehouse",
-            "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
-        }
+            "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkCatalog",
+            "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
+            "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkSessionCatalog",
+            "spark.sql.catalog.spark_catalog.catalog-impl": "org.apache.iceberg.aws.glue.GlueCatalog",
+            "spark.sql.catalog.spark_catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+            "spark.hadoop.hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.mmetastore.AWSGlueDataCatalogHiveClientFactory",
+            "spark.hadoop.proxyuser.hive.hosts":'*',
+            "spark.hadoop.proxyuser.hive.groups":'*',
+            'spark.hadoop.f3.s3a.endpoint.region':'eu-west-1'}
     }
-]
+    ]
 
 CLUSTER_CONFIG: dict[str, Any] = {
     "Name": "Spark Iceberg Cluster",
     "ReleaseLabel": "emr-7.5.0",
-    "LogUri": "s3://emr-project-raw",
+    "LogUri": "s3://citybikes-raw-data/logs/",
     "Applications": [{"Name": "Spark"}],
     "Instances": {
         "InstanceGroups": [
@@ -37,10 +40,10 @@ CLUSTER_CONFIG: dict[str, Any] = {
         ],
         "KeepJobFlowAliveWhenNoSteps": True,
         "TerminationProtected": False,
-        "Ec2SubnetId": "subnet-0f2c4478c4b688e8d",
+        "Ec2SubnetId": "subnet-047ce6dde68bc8f56",
     },
     "Configurations": SPARK_CONFIG,
-    "Servicit eRole": "EMR_DefaultRole",
+    "ServiceRole": "EMR_DefaultRole",
     "JobFlowRole": "EMR_EC2_DefaultRole",
     "VisibleToAllUsers": True,
 }

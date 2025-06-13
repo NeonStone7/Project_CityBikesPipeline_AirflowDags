@@ -8,12 +8,14 @@ from airflow.providers.amazon.aws.sensors.emr import (
     EmrStepSensor,
     EmrJobFlowSensor
 )
+from airflow.utils.trigger_rule import TriggerRule
+
 from airflow.decorators import dag, task, task_group
 from utils.variables import (
     default_args,
     TRANSFORMED_BUCKET,
     ICEBERG_JARS_PATH,
-    AGG_TABLES,
+    INITIAL_TABLES,
     NETWORK_IDS,
     RAW_BUCKET_NAME,
     DATETIME
@@ -24,9 +26,10 @@ from utils.commons import (
     return_default_tasks
 )
 @dag(
-    dag_id = 'transform_data_abdukareembikes',
+    dag_id = 'initial_transformer',
     default_args = default_args,
     schedule_interval = "0 4 * * *",
+    catchup = False
 ) 
 def transform_data():
 
@@ -36,7 +39,7 @@ def transform_data():
         job_flow_overrides=CLUSTER_CONFIG,
     )
 
-    job_flow_id = f"{{{{ task_instance.xcom_pull(task_ids='{create_cluster.task_id}', key='return_value') }}}}'"
+    job_flow_id = create_cluster.output
 
     emr_cluster_ready = EmrJobFlowSensor(
         task_id = 'emr_cluster_ready',
@@ -47,9 +50,9 @@ def transform_data():
     @task_group(group_id='processors')
     def process_data():
         for network in NETWORK_IDS:
-            for table in AGG_TABLES:
+            for table in INITIAL_TABLES:
 
-                task_id = f'process_{table}'
+                task_id = f'process_{network}_{table}'
                 job_args = {
                     '--table_name': table,
                     '--source_bucket': RAW_BUCKET_NAME,
@@ -63,15 +66,27 @@ def transform_data():
                     job_flow_id=job_flow_id,
                     steps = build_spark_submit_command(task_id, 
                                                     "s3://citybikes-raw-data/scripts/transformation_job.py",
-                                                    "s3://citybikes-raw-data/scripts/spark_jobs.zip", 
+                                                    ["s3://citybikes-raw-data/scripts/spark_jobs.zip"], 
                                                     ICEBERG_JARS_PATH, 
                                                     job_args)
-
                 )
+
+                wait_step = EmrStepSensor(
+                        task_id=f"wait_{task_id}",
+                        job_flow_id=job_flow_id,
+                        step_id="{{{{ task_instance.xcom_pull(task_ids='" + task_id + "', key='return_value')[0] }}}}",
+                        poke_interval=30,
+                    )
+                add_step >> wait_step
+
     terminate_cluster = EmrTerminateJobFlowOperator(
         task_id = 'terminate_cluster',
         job_flow_id=job_flow_id,
+        trigger_rule=TriggerRule.ALL_DONE,
+
     )
 
     start, end = return_default_tasks()
     start >> create_cluster >> emr_cluster_ready >> process_data() >> terminate_cluster >> end
+
+transform_data()
