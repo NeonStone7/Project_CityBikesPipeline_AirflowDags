@@ -66,28 +66,35 @@ def build_serverless_spark_command(S3_JOBFILE_LOCATION, pyfiles, jars, job_args)
     # build spark submit for emr serverless
     job_driver = {
         "sparkSubmit": {
-            "sparkSubmitParameters":
-                    {
                     "entryPoint": S3_JOBFILE_LOCATION,
                     "entryPointArguments": [],
                     "sparkSubmitParameters": 
-                        "--conf spark.sql.catalog.my_catalog=org.apache.iceberg.spark.SparkCatalog "
-                        + "--conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkCatalog "
+                        "--conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkCatalog "
                         + "--conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions "
-                        + "--conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog "
                         + "--conf spark.sql.catalog.spark_catalog.catalog-impl=org.apache.iceberg.aws.glue.GlueCatalog "
                         + "--conf spark.sql.catalog.spark_catalog.io-impl=org.apache.iceberg.aws.s3.S3FileIO "
                         + "--conf spark.hadoop.hive.metastore.client.factory.class=com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory "
                         + "--conf spark.hadoop.proxyuser.hive.hosts=* " 
                         + "--conf spark.hadoop.proxyuser.hive.groups=* "
+                        + "--conf spark.dynamicAllocation.enabled=true "
+                        + "--conf spark.dynamicAllocation.initialExecutors=0 "
+                        + "--conf spark.dynamicAllocation.minExecutors=0 "
+                        + "--conf spark.dynamicAllocation.maxExecutors=2 "
+                        + "--conf spark.executor.memoryOverhead=512 "
+                        + "--conf spark.driver.memoryOverhead=512 "
+                        + "--conf spark.executor.instances=2 "
+                        + "--conf spark.executor.cores=1 "
+                        + "--conf spark.executor.memory=2G "
+                        + "--conf spark.driver.cores=1 "
+                        + "--conf spark.driver.memory=2G "
                         + "--conf spark.hadoop.f3.s3a.endpoint.region=eu-west-1 ",
-                        }}}
+                        }}
 
 
-    job_driver['sparkSubmit']['sparkSubmitParameters']['sparkSubmitParameters'] = job_driver['sparkSubmit']['sparkSubmitParameters']['sparkSubmitParameters'] + '--py-files ' + ','.join(pyfiles) + ' '
-    job_driver['sparkSubmit']['sparkSubmitParameters']['sparkSubmitParameters'] = job_driver['sparkSubmit']['sparkSubmitParameters']['sparkSubmitParameters'] + '--jars ' + ','.join(jars) + ' '
+    job_driver['sparkSubmit']['sparkSubmitParameters'] = job_driver['sparkSubmit']['sparkSubmitParameters'] + '--py-files ' + ','.join(pyfiles) + ' '
+    job_driver['sparkSubmit']['sparkSubmitParameters'] = job_driver['sparkSubmit']['sparkSubmitParameters'] + '--jars ' + ','.join(jars) + ' '
 
     for key,value in job_args.items():
-        job_driver['sparkSubmit']['sparkSubmitParameters']['entryPointArguments'].extend([key, value])
+        job_driver['sparkSubmit']['entryPointArguments'].extend([key, value])
 
     return job_driver

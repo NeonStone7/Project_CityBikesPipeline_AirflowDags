@@ -9,18 +9,19 @@ SPARK_CONFIG = [
         }
     },
     {
-        "Classification": "spark-defaults",
-        "Properties": {
-            "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkCatalog",
-            "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
-            "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkSessionCatalog",
-            "spark.sql.catalog.spark_catalog.catalog-impl": "org.apache.iceberg.aws.glue.GlueCatalog",
-            "spark.sql.catalog.spark_catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-            "spark.hadoop.hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.mmetastore.AWSGlueDataCatalogHiveClientFactory",
-            "spark.hadoop.proxyuser.hive.hosts":'*',
-            "spark.hadoop.proxyuser.hive.groups":'*',
-            'spark.hadoop.f3.s3a.endpoint.region':'eu-west-1'}
+    "Classification": "spark-defaults",
+    "Properties": {
+        "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkCatalog",
+        "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
+        "spark.sql.catalog.spark_catalog.catalog-impl": "org.apache.iceberg.aws.glue.GlueCatalog",
+        "spark.sql.catalog.spark_catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+        "spark.hadoop.hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory",
+        "spark.hadoop.proxyuser.hive.hosts": "*",
+        "spark.hadoop.proxyuser.hive.groups": "*",
+        "spark.hadoop.fs.s3a.endpoint.region": "eu-west-1"
     }
+}
+
     ]
 
 CLUSTER_CONFIG: dict[str, Any] = {

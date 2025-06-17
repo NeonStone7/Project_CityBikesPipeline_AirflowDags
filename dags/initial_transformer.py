@@ -74,7 +74,7 @@ def transform_data():
                 wait_step = EmrStepSensor(
                         task_id=f"wait_{task_id}",
                         job_flow_id=job_flow_id,
-                        step_id="{{{{ task_instance.xcom_pull(task_ids='" + task_id + "', key='return_value')[0] }}}}",
+                        step_id=add_step.output,
                         poke_interval=30,
                     )
                 add_step >> wait_step

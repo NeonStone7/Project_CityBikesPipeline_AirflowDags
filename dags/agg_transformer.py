@@ -31,6 +31,8 @@ S3_JOBFILE_LOCATION = 's3://citybikes-raw-data/scripts/aggregation_job.py'
 SPARK_CONFIG_OVERRIDES = {
     'monitoringConfiguration': {'s3MonitoringConfiguration':{'logUri':'s3://citybikes-raw-data/logs/'}}
 }
+APPLICATION_ID = '00ftalukvgl8b90p'
+ROLE_ARN = "arn:aws:iam::676206924820:role/EmrServerlessStack-EmrServerlessExecutionRole889FE5-psEov7Za2JGx"
 
 @dag(
     dag_id = 'aggregated_transformer',
@@ -67,6 +69,7 @@ def transform_data():
                         task_id=f"wait_{task_id}",
                         application_id=APPLICATION_ID,
                         mode = 'reschedule',
+                        job_run_id = job.output,
                         poke_interval=30,
                     )
                 job >> wait_step
